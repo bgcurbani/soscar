@@ -1,0 +1,159 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="ProcuraOficinas.aspx.cs" Inherits="LocalizadorOficinas.Caminhos" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+    <script src="http://maps.google.com/maps/api/js?key=AIzaSyBV1qe9vPcm0CrnGsjawFulvtjwHZcOdiM&libraries=places" type="text/javascript"></script>
+    <script language="javascript" type="text/javascript">
+
+        //Variaveis globais
+        var posAtual;
+        var mapa;
+        var infowindow;
+        var markers = [];
+
+    function IniciarMapa() {
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(success);
+        } else {
+            alert("Geo Localização não é suportada no seu navegadro atual!");
+        }
+
+        function success(position) {
+
+            //Informacoes sobre a posicao atual do usuário
+            var lat = position.coords.latitude;
+            var long = position.coords.longitude;
+            var cidade = position.coords.locality;
+            posAtual = new google.maps.LatLng(lat, long);
+
+            var opcoes =
+            {
+                //TODO: verificar possibilidade de ajustar zoom conforme configuracao de distnacia de busca
+                zoom: 15,
+                center: posAtual,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+
+            mapa = new google.maps.Map(document.getElementById("mapa"), opcoes);
+
+            var controle = document.getElementById('controle');
+            controle.style.display = 'block';
+        }
+    }
+
+    // Sets the map on all markers in the array.
+    function setMapOnAll(map) {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(map);
+        }
+    }
+
+    // Remove os markers do mapa, sem deletar array.
+    function clearMarkers() {
+        setMapOnAll(null);
+    }
+
+    // Mostra os markers que estão no array.
+    function showMarkers() {
+        setMapOnAll(mapa);
+    }
+
+    // Deleta os markers do array
+    function deleteMarkers() {
+        clearMarkers();
+        markers = [];
+    }
+
+    function procurarOficinas() {
+        deleteMarkers();
+        //Detalhes da pesquisa dos locais
+        var request = {
+            location: posAtual,
+            radius: document.getElementById('raiobusca').value,
+            types: ['car_repair']
+        };
+
+        //Busca os locais de acordo com as configurações do usuário
+        var service = new google.maps.places.PlacesService(mapa);
+        infowindow = new google.maps.InfoWindow();
+
+        service.nearbySearch(request, function (results, status) {
+            if (status == google.maps.places.PlacesServiceStatus.OK) {
+                for (var i = 0; i < results.length; i++) {
+                    addMarker(results[i]);
+                }
+
+                showMarkers();
+            }
+            else if (status == google.maps.places.PlacesServiceStatus.ZERO_RESULTS){
+                alert("Não foram encontradas oficinas dentro do raio de busca.")
+            }
+        });
+    }
+
+    // Adiciona marker no mapa e no array.
+    function addMarker(place) {
+        var marker = new google.maps.Marker({
+            position: place.geometry.location,
+            map: mapa
+        });
+
+        //TODO: adicionar aqui as avaliacoes dos usuarios para ser exibido
+        google.maps.event.addListener(marker, 'click', function () {
+            var str = "Nome: " + place.name +
+                      "<br> Rating: " + place.rating +
+                      "<br> Place_id: " + place.place_id +
+                      "<br> Location: " + place.geometry.viewport +
+                      "<br> Está aberto? " + place.opening_hours.open_now;
+
+            // TODO: opening_hours 
+
+            infowindow.setContent(str);
+            infowindow.open(mapa, this);
+        });
+
+        markers.push(marker);
+    }
+
+    function Button1_onclick() {
+        procurarOficinas();
+    }
+
+    window.onload = IniciarMapa;
+    </script>
+    <table id ="controle">
+    <tr>
+    <td>
+    <table>
+    <tr>
+    <td>Raio de Busca (em metros):</td>
+    <td>
+        <input id="raiobusca" type="range" style="width: 105px" min="1" max="1000" value="500" /></td>
+    </tr>
+    <tr>
+    <td align ="right">
+        <input id="Button1" type="button" value="Procurar Oficinas" onclick="return Button1_onclick()" /></td>
+    </tr>
+    </table>
+    </td>
+    </tr>
+    <tr>
+    <td valign ="top">
+    <div id ="direcaopainel"  style="height: 390px;overflow: auto" ></div>
+    </td>
+    <td valign ="top">
+    <div id ="mapa" style="height: 390px; width: 489px"></div>
+    </td>
+    </tr>
+    </table>
+    </div>
+    </form>
+</body>
+</html>
