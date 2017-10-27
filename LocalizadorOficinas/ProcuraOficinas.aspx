@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="ProcuraOficinas.aspx.cs" Inherits="LocalizadorOficinas.Caminhos" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="ProcuraOficinas.aspx.cs" Inherits="LocalizadorOficinas.Caminhos" %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -128,31 +128,69 @@
 
     window.onload = IniciarMapa;
     </script>
-    <table id ="controle">
-    <tr>
-    <td>
-    <table>
-    <tr>
-    <td>Raio de Busca (em metros):</td>
-    <td>
-        <input id="raiobusca" type="range" style="width: 105px" min="1" max="1000" value="500" /></td>
-    </tr>
-    <tr>
-    <td align ="right">
-        <input id="Button1" type="button" value="Procurar Oficinas" onclick="return Button1_onclick()" /></td>
-    </tr>
+
+    <style>
+        .mapa
+        {
+            min-width: 400px;
+            width: auto;
+            min-height: 400px;
+            height: auto;
+            margin: 50px auto 50px auto;
+            background-color: black;
+            padding: 10px 10px;
+            overflow: hidden;
+        }
+
+        .controle
+        {
+            min-width: 200px;
+            width: auto;
+            min-height: 100px;
+            height: auto;
+            margin: 0px auto 0px auto;
+            overflow: auto;
+        }
+
+        .listaOficinas
+        {
+            margin: 20px auto 5px auto;
+            height: 390px;
+            
+        }
+
+        .pesquisa
+        {
+            margin: 20px auto 5px auto;
+        }
+        
+    </style>
+
+    <table id ="controle" class="controle">
+        <tr>
+            <td>
+                <table class="pesquisa">
+                    <tr>
+                        <td>Raio de Busca (em metros):</td>
+                        <td>
+                            <input id="raiobusca" type="range" style="width: 105px" min="1" max="1000" value="500" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align ="right">
+                            <input id="Button1" type="button" value="Procurar Oficinas" onclick="return Button1_onclick()" />
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td valign ="top">
+                <div id ="listaOficinas" class="listaOficinas"></div>
+            </td>
+        </tr>
     </table>
-    </td>
-    </tr>
-    <tr>
-    <td valign ="top">
-    <div id ="direcaopainel"  style="height: 390px;overflow: auto" ></div>
-    </td>
-    <td valign ="top">
-    <div id ="mapa" style="height: 390px; width: 489px"></div>
-    </td>
-    </tr>
-    </table>
+        <div id ="mapa" class="mapa"></div>
     </div>
     </form>
 </body>
