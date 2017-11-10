@@ -77,7 +77,8 @@
         var request = {
             location: posAtual,
             radius: document.getElementById('raiobusca').value,
-            types: ['car_repair']
+            types: ['car_repair'],
+            language: 'pt-BR'
         };
 
         //Busca os locais de acordo com as configurações do usuário
@@ -97,6 +98,14 @@
             }
         });
     }
+        
+    function IsDefined(elemento) {
+        return (typeof elemento !== 'undefined' && typeof elemento !== null);
+    }
+
+    function DeParaBool(booleano) {
+        return booleano ? "Sim" : "N&atildeo";
+    }
 
     // Adiciona marker no mapa e no array.
     function addMarker(place) {
@@ -107,12 +116,14 @@
 
         //TODO: adicionar aqui as avaliacoes dos usuarios para ser exibido
         google.maps.event.addListener(marker, 'click', function () {
-            var str = "Nome: " + place.name +
-                      "<br> Rating: " + place.rating +
-                      "<br> Place_id: " + place.place_id +
-                      "<br> Location: " + place.geometry.viewport +
-                      "<br> Está aberto? " + place.opening_hours.open_now;
+            const INDISPONIVEL = "Indispon&iacutevel";
 
+            var str = "Nome: " + (IsDefined(place.name) ? place.name : INDISPONIVEL) +
+                      "<br> Nota Geral: " + (IsDefined(place.rating) ? place.rating : INDISPONIVEL) +
+                      //"<br> Place_id: " + (IsDefined(place.place_id) ? place.place_id : INDISPONIVEL) +
+                      "<br> Endere&ccedilo: " + (IsDefined(place.vicinity) ? place.vicinity : INDISPONIVEL) +
+                      //"<br> Location: " + (IsDefined(place.geometry.viewport) ? place.geometry.viewport : INDISPONIVEL) +
+                      "<br> Est&aacute aberto: " + (IsDefined(place.opening_hours.open_now) ? DeParaBool(place.opening_hours.open_now) : INDISPONIVEL);
             // TODO: opening_hours 
 
             infowindow.setContent(str);
