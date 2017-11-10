@@ -71,8 +71,6 @@
   <ItemGroup>
     <Content Include="CadastroOficina.aspx" />
     <Content Include="ProcuraOficinas.aspx" />
-    <Content Include="Form.aspx" />
-    <Content Include="GoogleMapsMarcador.aspx" />
     <Content Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -100,22 +98,8 @@
     <Compile Include="ProcuraOficinas.aspx.designer.cs">
       <DependentUpon>ProcuraOficinas.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Form.aspx.cs">
-      <DependentUpon>Form.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Form.aspx.designer.cs">
-      <DependentUpon>Form.aspx</DependentUpon>
-    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
-    </Compile>
-    <Compile Include="GoogleMapsMarcador.aspx.cs">
-      <DependentUpon>GoogleMapsMarcador.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="GoogleMapsMarcador.aspx.designer.cs">
-      <DependentUpon>GoogleMapsMarcador.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
