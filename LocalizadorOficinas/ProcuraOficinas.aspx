@@ -123,7 +123,7 @@
                       //"<br> Place_id: " + (IsDefined(place.place_id) ? place.place_id : INDISPONIVEL) +
                       "<br> Endere&ccedilo: " + (IsDefined(place.vicinity) ? place.vicinity : INDISPONIVEL) +
                       //"<br> Location: " + (IsDefined(place.geometry.viewport) ? place.geometry.viewport : INDISPONIVEL) +
-                      "<br> Est&aacute aberto: " + (IsDefined(place.opening_hours.open_now) ? DeParaBool(place.opening_hours.open_now) : INDISPONIVEL);
+                      "<br> Est&aacute aberto: " + (IsDefined(place.opening_hours) && IsDefined(place.opening_hours.open_now) ? DeParaBool(place.opening_hours.open_now) : INDISPONIVEL);
             // TODO: opening_hours 
 
             infowindow.setContent(str);
