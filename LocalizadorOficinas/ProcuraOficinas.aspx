@@ -25,6 +25,14 @@
             background-color: red;
         }
 
+        #lblUsuario
+        {
+            float: right;
+            font-size: 30px;
+            color: white;
+            margin: 3px 30px 0px 0px;
+        }
+
         #login
         {
             margin: 5px 0px 0px 0px; 
@@ -104,7 +112,23 @@
             cursor: pointer;
         }
 
-        #imgAvaliacao
+        .imgAlteracao
+        {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            float: left;
+        }
+       
+        .imgExcluir
+        {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            float: left;
+        }
+
+        .imgAvaliacao
         {
             width: 20px;
             height: 20px;
@@ -194,6 +218,10 @@
         var mapa;
         var infowindow;
         var markers = [];
+        var places = [];
+        var idOficinaAvaliacao;
+        var alteracao = false;
+        var idAvaliacaoAlteracao = 0;
 
     function IniciarMapa() {
 
@@ -247,6 +275,7 @@
     function deleteMarkers() {
         clearMarkers();
         markers = [];
+        places = [];
     }
 
     function procurarOficinas() {
@@ -270,9 +299,6 @@
                 }
 
                 showMarkers();
-                //var listaOficinas = document.getElementById("listaOficinas");
-                //listaOficinas.innerHtml += "</tbody>";
-                //alert(listaOficinas.innerHtml);
             }
             else if (status == google.maps.places.PlacesServiceStatus.ZERO_RESULTS){
                 alert("Não foram encontradas oficinas dentro do raio de busca.")
@@ -295,7 +321,6 @@
             map: mapa
         });
 
-        //TODO: adicionar aqui as avaliacoes dos usuarios para ser exibido
         google.maps.event.addListener(marker, 'click', function () {
             const INDISPONIVEL = "Indispon&iacutevel";
 
@@ -317,16 +342,41 @@
         var cell2 = row.insertCell(1);
         var cell3 = row.insertCell(2);
 
-        var id = "imgFavorito" + (listaOficinas.rows.length - 1);
+
+        var id    = "imgFavorito" + (listaOficinas.rows.length - 1);
+        var idAva = "imgAvaliacao" + (listaOficinas.rows.length - 1);
 
         cell1.innerHTML += (IsDefined(place.name) ? place.name : "INDISPONIVEL");
-        cell2.innerHTML += "<img class='imgFavorito' id='" + id + "' src='favorito2.png' onclick='return Favorito_onclick(this.id)'></img>";
-        cell3.innerHTML += "<img id='imgAvaliacao' src='avaliacao.png' onclick='return Avaliacao_onclick()'></img>";
+        cell3.innerHTML += "<img class='imgAvaliacao' id='" + idAva + "' src='avaliacao.png' onclick='return Avaliacao_onclick(this.id)'></img>";
 
+        var sNomeCliente = document.getElementById("lblUsuario").textContent;
+        var sIDOficina = place.place_id;
+
+        PageMethods.VerificaFavorito(sIDOficina, sNomeCliente, onSucess, onError);
+
+        function onSucess(result) {
+            if (result == "S")
+                cell2.innerHTML += "<img class='imgFavorito' id='" + id + "' src='favorito.png' onclick='return Favorito2_onclick(this.id)'></img>";
+            else
+                cell2.innerHTML += "<img class='imgFavorito' id='" + id + "' src='favorito2.png' onclick='return Favorito_onclick(this.id)'></img>";
+        }
+
+        function onError(result) {
+            alert('Cannot process your request at the moment, please try later.');
+        }
+
+        places.push(place);
         markers.push(marker);
     }
 
     function Button1_onclick() {
+
+        var sNomeCliente = document.getElementById("lblUsuario");
+        if (sNomeCliente == null)
+        {
+            alert("Por favor, faça login antes de procurar oficinas.");
+            return false;
+        }
 
         var listaOficinas = document.getElementById("listaOficinas");
         listaOficinas.innerHTML = "";
@@ -343,12 +393,168 @@
         procurarOficinas();
     }
 
-    function Avaliacao_onclick() {
+    function Avaliacao_onclick(clicked_avaliacao) {
+        var listaOficinas = document.getElementById("listaOficinas");
+        var indice = clicked_avaliacao.substring(12, clicked_avaliacao.length);
+
+        idOficinaAvaliacao = places[indice - 1].place_id;
+
         var modal = document.getElementById('myModal');
         modal.style.display = "block";
+
+        PageMethods.GetCodigoAvaliacoes(idOficinaAvaliacao, onSucess, onError);
+
+        var tblAvaliacao = document.getElementById("tblAvaliacao");
+        tblAvaliacao.innerHTML = "";
+
+        var header = tblAvaliacao.createTHead();
+        var row = header.insertRow(0);
+        var cell = row.insertCell(0);
+        cell.innerHTML = "<b>Usuário</b>";
+        cell = row.insertCell();
+        cell.innerHTML = "<b>Avaliação</b>";
+        cell = row.insertCell();
+        cell.innerHTML = "<b>Nota</b>";
+        cell = row.insertCell();
+        cell.innerHTML = "";
+        cell = row.insertCell();
+        cell.innerHTML = "";
+
+        function onSucess(result) {
+
+            while (result != "")
+            {
+                var iVirgula = result.indexOf(",");
+
+                var iCodigo = result.substring(0, iVirgula);
+                result = result.substr(iVirgula + 1);
+                
+                PageMethods.LeAvaliacao(iCodigo, onSucess, onError);
+
+                function onSucess(result) {
+
+                    var iPipe = result.indexOf("|");
+                    var sUsuario = result.substring(0, iPipe);
+                    result = result.substr(iPipe + 1);
+
+                    iPipe = result.indexOf("|");
+                    var sAvaliacao = result.substring(0, iPipe);
+                    result = result.substr(iPipe + 1);
+
+                    iPipe = result.indexOf("|");
+                    var sNota = result.substring(0, iPipe);
+                    result = result.substr(iPipe + 1);
+
+                    var iCodigoAvaliacao = result;
+
+                    var listaOficinas = document.getElementById("tblAvaliacao");
+                    var row = listaOficinas.insertRow();
+                    var cell1 = row.insertCell(0);
+                    var cell2 = row.insertCell(1);
+                    var cell3 = row.insertCell(2);
+                    var cell4 = row.insertCell(3);
+                    var cell5 = row.insertCell(4);
+
+                    cell1.innerHTML += sUsuario;
+                    cell2.innerHTML += sAvaliacao;
+                    cell3.innerHTML += sNota;
+                    
+                    var id = "imgAlteracao" + iCodigoAvaliacao;
+                    var idExcluir = "imgExcluir" + iCodigoAvaliacao;
+
+                    cell4.innerHTML += "<img class='imgAlteracao' id='" + id + "' src='alteracao.png' onclick='return Alteracao_onclick(this.id)'></img>";
+                    cell5.innerHTML += "<img class='imgExcluir' id='" + idExcluir + "' src='excluir.png' onclick='return Excluir_onclick(this.id)'></img>";
+                }
+
+                function onError(result) {
+                    alert('Cannot process your request at the moment, please try later.');
+                }
+            }
+
+        }
+
+        function onError(result) {
+            alert('Cannot process your request at the moment, please try later.');
+        }
     }
 
-    function Favorito_onclick(clicked_favorito) {
+    function Alteracao_onclick(clicked_alterar)
+    {
+        var sNomeCliente = document.getElementById("lblUsuario").textContent;
+        var indice = clicked_alterar.substring(12, clicked_alterar.length);
+
+        var listaAvaliacoes = document.getElementById("tblAvaliacao");
+        for (var i = 1; i < listaAvaliacoes.rows.length; i++)
+        {
+            var cell = listaAvaliacoes.rows[i].cells[3].innerHTML;
+
+            if (cell.indexOf(clicked_alterar) > 0)
+            {
+                if (sNomeCliente != listaAvaliacoes.rows[i].cells[0].innerHTML)
+                {
+                    alert("Você não pode alterar avaliações de outros usuários.");
+                    return false;
+                }
+
+                document.getElementById("txtAvaliacao").innerHTML = listaAvaliacoes.rows[i].cells[1].innerHTML;
+                document.getElementById("txtNota").value = listaAvaliacoes.rows[i].cells[2].innerHTML;
+
+                break;
+            }
+        }
+
+        idAvaliacaoAlteracao = indice;
+        alteracao = true;
+    }
+
+    function Excluir_onclick(clicked_excluir)
+    {
+        var sNomeCliente = document.getElementById("lblUsuario").textContent;
+        var indice = clicked_excluir.substring(10, clicked_excluir.length);
+
+        var listaAvaliacoes = document.getElementById("tblAvaliacao");
+        for (var i = 1; i < listaAvaliacoes.rows.length; i++) {
+            var cell = listaAvaliacoes.rows[i].cells[4].innerHTML;
+
+            if (cell.indexOf(clicked_excluir) > 0) {
+                if (sNomeCliente != listaAvaliacoes.rows[i].cells[0].innerHTML) {
+                    alert("Você não pode excluir avaliações de outros usuários.");
+                    return false;
+                }
+            }
+        }
+
+        PageMethods.DeletarAvaliacao(indice, onSucess, onError);
+
+        function onSucess(result) {
+            alert(result);
+
+            var listaAvaliacoes = document.getElementById("tblAvaliacao");
+            for (var i = 1; i < listaAvaliacoes.rows.length; i++)
+            {
+                var cell = listaAvaliacoes.rows[i].cells[4].innerHTML;
+
+                if (cell.indexOf(clicked_excluir) > 0)
+                {
+                    if (sNomeCliente != listaAvaliacoes.rows[i].cells[0].innerHTML)
+                    {
+                        alert("Você não pode excluir avaliações de outros usuários.");
+                        return false;
+                    }
+
+                    listaAvaliacoes.deleteRow(i);
+                    break;
+                }
+            }
+        }
+
+        function onError(result) {
+            alert('Cannot process your request at the moment, please try later.');
+        }
+    }
+
+    function Favorito_onclick(clicked_favorito)
+    {
         var listaOficinas = document.getElementById("listaOficinas");
         var indice = clicked_favorito.substring(11, clicked_favorito.length);
 
@@ -356,7 +562,19 @@
 
         listaOficinas.rows[indice].cells[1].innerHTML = "<img class='imgFavorito' id='" + id + "' src='favorito.png' onclick='return Favorito2_onclick(this.id)'></img>";
 
-        // TODO: Mandar para o banco.
+        var sNomeCliente = document.getElementById("lblUsuario").textContent;
+        var sIDOficina = places[indice - 1].place_id;
+        var sFavoritar = "sim";
+        
+        PageMethods.FavoritarOficina(sIDOficina, sNomeCliente, sFavoritar, onSucess, onError);
+
+        function onSucess(result) {
+            alert(result);
+        }
+
+        function onError(result) {
+            alert('Cannot process your request at the moment, please try later.');
+        }
     }
 
     function Favorito2_onclick(clicked_favorito) {
@@ -367,7 +585,93 @@
 
         listaOficinas.rows[indice].cells[1].innerHTML = "<img class='imgFavorito' id='" + id + "' src='favorito2.png' onclick='return Favorito_onclick(this.id)'></img>";
 
-        // TODO: Mandar para o banco.
+        var sNomeCliente = document.getElementById("lblUsuario").textContent;
+        var sIDOficina = places[indice - 1].place_id;
+        var sFavoritar = "não";
+
+        PageMethods.FavoritarOficina(sIDOficina, sNomeCliente, sFavoritar, onSucess, onError);
+
+        function onSucess(result) {
+            alert(result);
+        }
+
+        function onError(result) {
+            alert('Cannot process your request at the moment, please try later.');
+        }
+    }
+
+    function Avaliar_onclick() {
+        var sNomeCliente = document.getElementById("lblUsuario").textContent;
+        var sAvaliacao = document.getElementById("txtAvaliacao").value;
+        var iNota = document.getElementById("txtNota").value;
+
+        if (alteracao)
+        {
+            PageMethods.AtualizarAvaliacao(idAvaliacaoAlteracao, sAvaliacao, iNota, onSucess, onError);
+
+            function onSucess(result) {
+                alert(result);
+
+                var alterado = "imgAlteracao" + idAvaliacaoAlteracao;
+
+                var listaAvaliacoes = document.getElementById("tblAvaliacao");
+                for (var i = 1; i < listaAvaliacoes.rows.length; i++)
+                {
+                    var cell = listaAvaliacoes.rows[i].cells[3].innerHTML;
+
+                    if (cell.indexOf(alterado) > 0)
+                    {
+                        listaAvaliacoes.rows[i].cells[1].innerHTML = sAvaliacao;
+                        listaAvaliacoes.rows[i].cells[2].innerHTML = iNota;
+
+                        break;
+                    }
+                }
+
+                alteracao = false;
+                idAvaliacaoAlteracao = -1;
+
+                document.getElementById("txtAvaliacao").value = "";
+                document.getElementById("txtNota").value = "";
+            }
+
+            function onError(result) {
+                alert('Cannot process your request at the moment, please try later.');
+            }
+        }
+        else
+        {
+            PageMethods.CadastrarAvaliacao(idOficinaAvaliacao, sNomeCliente, sAvaliacao, iNota, onSucess, onError);
+
+            function onSucess(result) {
+                alert(result);
+
+                var listaOficinas = document.getElementById("tblAvaliacao");
+                var row = listaOficinas.insertRow();
+                var cell1 = row.insertCell(0);
+                var cell2 = row.insertCell(1);
+                var cell3 = row.insertCell(2);
+                var cell4 = row.insertCell(3);
+                var cell5 = row.insertCell(4);
+
+                cell1.innerHTML += sNomeCliente;
+                cell2.innerHTML += sAvaliacao;
+                cell3.innerHTML += iNota;
+
+                var id = "imgAlteracao" + 0;
+                var idExcluir = "imgExcluir" + 0;
+
+                cell4.innerHTML += "<img class='imgAlteracao' id='" + id + "' src='alteracao.png' onclick='return Alteracao_onclick(this.id)'></img>";
+                cell5.innerHTML += "<img class='imgExcluir' id='" + idExcluir + "' src='excluir.png' onclick='return Excluir_onclick(this.id)'></img>";
+
+                document.getElementById("txtAvaliacao").value = "";
+                document.getElementById("txtNota").value = "";
+            }
+
+            function onError(result) {
+                alert('Cannot process your request at the moment, please try later.');
+            }
+        }
     }
 
     function updateTextInput(val) {
@@ -382,36 +686,59 @@
         }
     }
 
+    function validateLogin()
+    {
+        var txtLogin = document.getElementById("<%=txtLogin.ClientID%>");
+        var txtSenha = document.getElementById("<%=txtPassword.ClientID%>");
+        
+        if (txtLogin.value == "") {
+            alert("Por favor informar o usuário!");
+            return false;
+        }
+
+        if (txtSenha.value == "") {
+            alert("Por favor informar a senha!");
+            return false;
+        }
+
+        return true;
+    }
+
     window.onload = IniciarMapa;
     </script>
 
     <div id="cabecalho" class="cabecalho">
         <h1 style="margin: 5px auto auto auto; color:white; float: left;">S.O.S.CAR</h1>
 
+        <asp:Label ID="lblUsuario" runat="server" Visible="false" Text="" />
         <table id="login">
             <tr>
                 <td>
-                    <h3 style="margin: 5px auto auto auto; color: white; float: left;">Usuário:</h3>
+                    <asp:Label ID="lblLogin" runat="server" style="margin: 5px auto auto auto; color: white; float: left;" Text="Usuário:" />
                 </td>
                 <td>
-                    <input style="margin 5px auto auto auto; float: left" type="text" name="username" maxlength="20"/>
+                    <asp:TextBox ID="txtLogin" runat="server" style="margin 5px auto auto auto; float: left" maxlength="50"></asp:TextBox>
                 </td>
                 <td>
-                    <h3 style="margin: 5px auto auto auto; color: white; float: left;">Senha:</h3>
+                    <asp:Label ID="lblPassword" runat="server" style="margin: 5px auto auto auto; color: white; float: left;" Text="Senha:" />
                 </td>
                 <td>
-                    <input type="password" name="pass" maxlength="10"/>
+                    <asp:TextBox ID="txtPassword" runat="server" TextMode="Password" maxlength="50"></asp:TextBox>
                 </td>
                 <td>
-                    <button >Login</button>
+                    <asp:Button ID="btnLogin" runat="server" OnClientClick="return validateLogin();" OnClick="BtnLogin_Click" text="Login" />
                 </td>
                 <td>
-                    <input type="button" value="Cadastrar" />
+                    <asp:Button ID="btnCadastrar" runat="server" OnClientClick="return validateLogin();" OnClick="BtnCadastrar_Click" text="Cadastrar" />
                 </td>
             </tr>
         
         </table>
+
     </div>
+
+    <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true">
+    </asp:ScriptManager>
 
     <table id ="controle" class="controle">
         <tr>
@@ -437,7 +764,13 @@
         <tr>
             <td>
                 <table id="listaOficinas" class="tblListagem">
-
+                    <thead>
+                        <tr>
+                            <td><b>Nome</b></td>
+                            <td><b>Favorito</b></td>
+                            <td><b>Avaliação</b></td>
+                        </tr>
+                    </thead>
                 </table>
 
             </td>
@@ -460,7 +793,7 @@
             <tr>
                 <td><p class="lblAvaliacao">Nota:</p></td>
                 <td><input type="number" id="txtNota"  min="0" max="10" /></td>
-                <td><input type="button" id="btnAvaliacao" value="Avaliar" /></td>
+                <td><input type="button" id="btnAvaliacao" onclick="return Avaliar_onclick()" value="Avaliar" /></td>
             </tr>
         </table>
 
@@ -470,6 +803,8 @@
                     <td><b>Usuário</b></td>
                     <td><b>Avaliação</b></td>
                     <td><b>Nota</b></td>
+                    <td></td>
+                    <td></td>
                 </tr>
             </thead>
         </table>
